@@ -1,0 +1,230 @@
+@extends('layouts.app')
+@section('title','Approve Tugas Harian')
+@section('breadcrumb')
+<div class="app-content-header">
+    <!--begin::Container-->
+    <div class="container-fluid">
+    <!--begin::Row-->
+    <div class="row">
+        <div class="col-sm-6"><h5 class="mb-2">Approve Tugas Harian</h5></div>
+        <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-end">
+            <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Approve Tugas Harian</li>
+        </ol>
+        </div>
+    </div>
+    <!--end::Row-->
+    </div>
+    <!--end::Container-->
+</div>
+@endsection
+@section('content')
+<div class="container-fluid">
+    <form action='javascript:void(0)' enctype="multipart/form-data" id="form_data">
+    @csrf
+    @method("post")
+    <input type="hidden" value="{{ $id }}" id='id' name='id'>
+    <div class="row">
+        <div class="col-9">
+            <div class="card card-primary card-outline mb-4">
+                <div class="card-header"><div class="card-title">Buat Tugas Harian</div></div>
+                    <!--begin::Body-->
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="judul" class="form-label">
+                                Jurul Tugas <b class="text-danger">*</b>
+                            </label>
+
+                            <input type="text" 
+                                class="form-control" 
+                                name="judul" 
+                                id="judul" 
+                                disabled="disabled" 
+                                value="{{ $data->judul }}"
+                                placeholder="Judul">
+                        </div>
+                        <div class="mb-3">
+                            <label for="tanggal" class="form-label">
+                                Tanggal <b class="text-danger">*</b>
+                            </label>
+
+                            <input type="text" 
+                                class="form-control" 
+                                name="tanggal" 
+                                id="tanggal" 
+                                disabled="disabled"
+                                value="{{ Carbon\Carbon::parse($data->tanggal)->locale('id')->translatedFormat('d F Y') }}"
+                                placeholder="Tanggal">
+                        </div>
+                        <div class="mb-3">
+                            <label for="isbn" class="form-label">
+                                Uraian <b class="text-danger">*</b>
+                            </label>
+
+                            <textarea type="text" 
+                                class="form-control uraian" 
+                                name="uraian" 
+                                id="uraian" 
+                                row="5"
+                                disabled="disabled"
+                                placeholder="Uraian">{{ $data->uraian }}</textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="dokumentasi" class="form-label">
+                                Dokumentasi <b class="text-danger">*</b>
+                            </label>
+                            @if(empty($data->dokumentasi))
+                                Tidak ada dokumentasi
+                            @else
+                                <img src="/uploads/images/{{ $data->dokumentasi }}" class="img-responsive" style='max-width:100%'>
+                            @endif
+                        </div>
+
+                    </div>
+                    <!--end::Body-->
+                    <!--begin::Footer-->
+                    <!-- <div class="card-footer">
+                      <button type="submit" id="btn-submit" class="btn btn-success btn-flat btn-sm float-end"><i class="fa fa-save"></i> Simpan</button>
+                  </div> -->
+                    <!--end::Footer-->
+                <!--end::Form-->
+            </div>  
+        </div>
+        <div class="col-3">
+            <div class="card card-primary card-outline mb-4">
+                <div class="card-header"><div class="card-title">Form Submit</div></div>
+                <!--end::Header-->
+                <!--begin::Form-->
+                
+                    <!--begin::Body-->
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="isbn" class="form-label">
+                                Note <b class="text-danger">*</b>
+                            </label>
+
+                            <textarea type="text" 
+                                class="form-control" 
+                                name="note" 
+                                id="note" 
+                                placeholder="Note"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <button type="submit" id="btn-reject" class="btn btn-danger btn-flat btn-sm "><i class="fa fa-times"></i> Reject</button>
+                            <button type="submit" id="btn-submit" class="btn btn-success btn-flat btn-sm float-end"><i class="fa fa-check-square"></i> Submit</button>&nbsp;
+                        </div>
+                        
+
+                    </div>
+                    <!--end::Body-->
+                    <!--begin::Footer-->
+                    <!-- <div class="card-footer">
+                      <button type="submit" id="btn-submit" class="btn btn-success btn-flat btn-sm float-end"><i class="fa fa-save"></i> Simpan</button>
+                  </div> -->
+                    <!--end::Footer-->
+                <!--end::Form-->
+            </div>  
+        </div>
+    </div> 
+    </form>   
+</div>
+@endsection
+@section('js')
+<script>
+    $(function(){
+        $('#uraian').summernote({
+            height: 200,
+            placeholder: 'Tuliskan uraian tugas harian...',
+            toolbar: [
+                ['style', ['bold', 'italic', 'underline']],
+                ['para', ['ul', 'ol', 'paragraph']],
+                ['insert', ['link']],
+                ['view', ['fullscreen', 'codeview']]
+            ]
+        });
+
+        flatpickr("#tanggal", {
+            altInput: true,
+            altFormat: "d F Y",
+            dateFormat: "Y-m-d",
+            allowInput: false,
+            locale: "id",
+            defaultDate: "today"
+        });
+
+        $("#btn-reject").on('click',function(e){
+            e.preventDefault();
+            Swal.fire({
+                title: 'Apakah Anda yakin?',
+                text: "Data ini akan mereject ini!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Ya, Reject!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    proses_data('reject');
+                }
+            });
+            
+        });
+
+        $("#btn-submit").on('click',function(e){
+            e.preventDefault();
+            proses_data('posted');
+        });
+        $('#uraian').summernote('disable');
+    })
+    proses_data = function(status){
+        let iData = new FormData(document.getElementById("form_data"));
+        iData.append('status', status);
+        $.ajax({
+            type    : "POST",
+            url     : "{{ route('task.update_approve') }}",
+            data    : iData,
+            cache   : false,
+            processData: false,
+            contentType: false,
+            beforeSend  : function (){
+                $("#btn-submit").html("<i class='fa fa-spinner fa-spin'></i>  Approve..")
+                $("#btn-submit").prop("disabled",true);
+                $("#btn-draft").html("<i class='fa fa-spinner fa-spin'></i>  Reject..")
+                $("#btn-draft").prop("disabled",true);
+            },
+            success: function(result){
+                console.log(result)
+                if(result.status == "success"){
+                    position = "bottom-left";
+                    icons = result.status;
+                    pesan = result.messages;
+                    title = "Saved!";
+                    info(title,pesan,icons,position);
+                    $("#btn-submit").html("<i class='fa fa-save'></i> Approve")
+                    $("#btn-submit").prop("disabled",false);
+                    $("#btn-draft").html("<i class='fa fa-save'></i> Reject")
+                    $("#btn-draft").prop("disabled",false);
+                    setTimeout(() => {
+                        window.location.href = "{{ route('task') }}";
+                    }, 2000);
+                    
+                }
+            },
+            error: function(e){
+                console.log(e)
+                $("#btn-submit").html("<i class='fa fa-save'></i> Approve")
+                $("#btn-submit").prop("disabled",false);
+                $("#btn-draft").html("<i class='fa fa-save'></i> Reject")
+                $("#btn-draft").prop("disabled",false);
+                error_message(e,'Proses Data Error');
+            }
+        })
+    }
+
+   
+</script>
+@endsection
+
