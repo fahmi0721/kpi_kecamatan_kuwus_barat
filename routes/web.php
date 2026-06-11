@@ -27,6 +27,8 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middl
 use App\Http\Controllers\DashboardController;
 Route::group(['middleware' => ['auth']], function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/task-summary', [DashboardController::class, 'get_count'])->name('dashboard.task-summary');
+    Route::get('/chart-task-posted', [DashboardController::class, 'get_barchar'])->name('dashboard.chart-task-posted');
 });
 
 

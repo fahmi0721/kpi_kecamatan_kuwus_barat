@@ -19,6 +19,11 @@ class PegawaiService
         $data = Pegawai::findOrFail($id);
         return $data;
     }
+    
+    public static function get_count(){
+        $data = Pegawai::count();
+        return $data;
+    }
 
     public static function Validasi($request){
        

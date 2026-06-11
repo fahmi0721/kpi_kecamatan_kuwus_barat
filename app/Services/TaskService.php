@@ -31,6 +31,76 @@ class TaskService
         return $data;
     }
 
+    public static function get_count_task(){
+        $user = Auth::user();
+        $query = Task::query();
+        if ($user->level === 'pegawai') {
+            // hanya data pegawai login
+            $query->where('pegawai_id', $user->pegawai_id);
+        } elseif ($user->level === 'pimpinan') {
+            // ambil pegawai bawahan
+            $pegawai_ids = ViewPegawaiBawahan::where('pegawai_atasan_id', $user->pegawai_id)
+                ->pluck('pegawai_bawahan_id')
+                ->toArray();
+            // tambahkan dirinya sendiri
+            $pegawai_ids[] = $user->pegawai_id;
+            $query->whereIn('pegawai_id', $pegawai_ids);
+        }
+
+        $jumlahTask = $query->selectRaw("
+                CASE 
+                    WHEN status = 'posted' THEN 'selesai'
+                    WHEN status IN ('draft', 'submit', 'reject') THEN 'pending'
+                    ELSE 'pending'
+                END as kategori,
+                COUNT(*) as total
+            ")
+            ->groupBy('kategori')
+            ->pluck('total', 'kategori');
+
+        $summary = [
+            'selesai' => $jumlahTask['selesai'] ?? 0,
+            'pending' => $jumlahTask['pending'] ?? 0,
+        ];
+        return $summary;
+    }
+
+    public static function chartTaskPosted()
+    {
+        $user = Auth::user();
+
+        $query = Task::query()
+            ->where('status', 'posted');
+
+        if ($user->level === 'pegawai') {
+
+            // hanya data pegawai login
+            $query->where('pegawai_id', $user->pegawai_id);
+
+        } elseif ($user->level === 'pimpinan') {
+
+            // data bawahan + data sendiri
+            $pegawai_ids = ViewPegawaiBawahan::where('pegawai_atasan_id', $user->pegawai_id)
+                ->pluck('pegawai_bawahan_id')
+                ->toArray();
+
+            $pegawai_ids[] = $user->pegawai_id;
+
+            $query->whereIn('pegawai_id', $pegawai_ids);
+        }
+
+        $data = $query->selectRaw('DATE(tanggal) as tanggal, COUNT(*) as total')
+            ->groupBy(DB::raw('DATE(tanggal)'))
+            ->orderBy('tanggal', 'asc')
+            ->get();
+
+        return [
+            'status' => 'success',
+            'labels' => $data->pluck('tanggal'),
+            'values' => $data->pluck('total'),
+        ];
+    }
+
     private static function get_pegawai_id_bawahan(){
         return ViewPegawaiBawahan::where("pegawai_atasan_id",Auth::user()->pegawai_id)
                 ->pluck('pegawai_bawahan_id')
